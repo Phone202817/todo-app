@@ -23,9 +23,20 @@
 
               <v-card-actions>
                 <v-spacer />
-                <v-btn color="primary" prepend-icon="$vuetify"> Button </v-btn>
-                <v-btn color="primary" type="submit" elevation> Login </v-btn>
-                
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-account-plus"
+                  @click="register"
+                >
+                  Register
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-login"
+                  type="submit"
+                >
+                  Login
+                </v-btn>
               </v-card-actions>
             </v-form>
           </v-card-text>
@@ -50,10 +61,11 @@ const login = () => {
     alert("Invalid credentials");
   }
 };
+const register = () => {
+  router.push('/register')
+};
 </script>
 
 <style scoped>
-.v-card {
-  padding: 16px;
-}
+@import "../css/login.css";
 </style>

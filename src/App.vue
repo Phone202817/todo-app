@@ -3,7 +3,7 @@
 </script>
 
 <template>
-<v-app>
+<!-- <v-app> -->
   <router-view />
-  </v-app>
+  <!-- </v-app> -->
 </template>
