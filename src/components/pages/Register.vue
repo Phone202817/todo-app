@@ -55,7 +55,7 @@ const onRegister = async () => {
   try {
     const user = await registerUser(email.value, password.value, displayName.value)
     if (user) {
-      router.push('/todos')
+      router.push('/usermanage')
     }
   } catch (err: any) {
     alert(err.message || 'Registration failed')

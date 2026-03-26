@@ -1,11 +1,13 @@
+import { type RouteRecordRaw } from "vue-router";
 
-import Login from '../pages/Login.vue';
-import Register from '../pages/Register.vue';
+import Login from "../pages/Login.vue";
+import Register from "../pages/Register.vue";
+import UserManage from "../pages/UserManage.vue";
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/",
-    component: Login,
+    redirect: "/login",
   },
   {
     path: "/login",
@@ -14,6 +16,11 @@ const routes = [
   {
     path: "/register",
     component: Register,
+  },
+  {
+    path: "/usermanage",
+    component: UserManage,
+    meta: { requiresAuth: true },
   },
 ];
 
