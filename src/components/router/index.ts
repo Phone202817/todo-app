@@ -24,7 +24,7 @@ function getCurrentUser() {
   })
 }
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   try {
     const user = await getCurrentUser()
     // If the user is authenticated and tries to access login/register, redirect to app
