@@ -28,14 +28,13 @@
               />
 
               <v-card-actions>
+                <v-btn  prepend-icon="mdi-login" to="/login">Login</v-btn>
                 <v-spacer />
                 <v-btn color="primary" prepend-icon="mdi-account-plus" type="submit">Register</v-btn>
               </v-card-actions>
             </v-form>
           </v-card-text>
-          <v-card-subtitle class="px-6 pb-6">
-            <RouterLink to="/login">Already have an account? Login</RouterLink>
-          </v-card-subtitle>
+
         </v-card>
       </v-col>
     </v-row>
@@ -65,5 +64,5 @@ const onRegister = async () => {
 </script>
 
 <style scoped>
-.v-card { padding: 16px }
+@import "../css/login.css";
 </style>
