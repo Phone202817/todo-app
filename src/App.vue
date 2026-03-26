@@ -3,7 +3,8 @@
 </script>
 
 <template>
-<!-- <v-app> -->
+<v-app>
   <router-view />
-  <!-- </v-app> -->
+   <!-- <MainLayout /> -->
+  </v-app>
 </template>

@@ -18,10 +18,16 @@ const routes: RouteRecordRaw[] = [
     component: Register,
   },
   {
-    path: "/usermanage",
-    component: UserManage,
-    meta: { requiresAuth: true },
-  },
+  path: '/usermanage',
+  component: () => import("../layouts/MainLayout.vue"),
+  meta: { requiresAuth: true },
+  children: [
+    {
+      path: '',
+      component: UserManage
+    }
+  ]
+},
 ];
 
 export default routes;

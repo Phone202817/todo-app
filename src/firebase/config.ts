@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDhWH6r0NZx1j2uhhYSYcWXqPJIyx2M8es",
@@ -15,3 +15,8 @@ const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// Persist auth state across page reloads
+setPersistence(auth, browserLocalPersistence).catch(() => {
+  // ignore persistence errors (e.g., non-browser environment)
+})
