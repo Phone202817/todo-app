@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
+    "@mdi/font": "^7.4.47",
     "firebase": "^12.11.0",
+    "sass": "^1.98.0",
     "vue": "^3.5.30",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "vuetify": "^4.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
