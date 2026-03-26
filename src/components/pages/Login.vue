@@ -49,7 +49,7 @@ const password = ref('')
 const login = async () => {
   try {
     await loginUser(email.value, password.value)
-    router.push('/usermanage')
+    router.push('/overview')
   } catch (err: any) {
     if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
       alert('Invalid credentials — please check email and password')

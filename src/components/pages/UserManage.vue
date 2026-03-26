@@ -1,146 +1,205 @@
 <template>
-    <v-card class="tabmenu pa-4">
-        <v-card-title class="text-h5">User Management</v-card-title>
+  <v-container fluid>
+    <v-card class="pa-6 rounded-xl elevation-3">
 
-        <v-row class="align-center mb-4">
-            <v-col cols="12" md="6">
-                <v-text-field
-                    v-model="search"
-                    label="Search"
-                    prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
-                    hide-details
-                    single-line
-                ></v-text-field>
-            </v-col>
-            <v-col cols="12" md="6" class="text-right">
-                <v-btn prepend-icon="mdi-account-plus" color="primary" @click="onAddUser">Add User</v-btn>
-            </v-col>
-        </v-row>
+      <!-- 🔥 Header -->
+      <div class="d-flex justify-space-between align-center mb-4">
+        <div class="text-h5 font-weight-bold">User Management</div>
+        <v-btn color="primary" @click="openAdd">Add User</v-btn>
+      </div>
 
-        <v-row dense>
-            <v-col cols="12" v-if="loading">
-                <v-skeleton-loader type="card" />
-            </v-col>
+      <!-- 🔍 Search -->
+      <v-text-field v-model="search" label="Search user..." prepend-inner-icon="mdi-magnify" variant="outlined"
+        class="mb-4" />
 
-            <v-col v-for="user in filteredUsers" :key="user.id" cols="12" sm="6" md="4" lg="3">
-                <v-card class="user-card pa-4">
-                    <v-row class="align-center">
-                        <v-col cols="3" class="text-center">
-                            <v-avatar size="64" class="mx-auto" color="primary" tile>
-                                <span class="white--text text-h6">{{ (user.name || '?').charAt(0).toUpperCase() }}</span>
-                            </v-avatar>
-                        </v-col>
-                        <v-col cols="9">
-                            <div class="text-h6 font-weight-medium">{{ user.name }}</div>
-                            <div class="text-caption text--secondary">{{ user.email }}</div>
-                            <div class="mt-2">
-                                <v-chip small :color="user.status === 'active' ? 'green lighten-2' : 'grey lighten-1'">
-                                    {{ user.status || 'inactive' }}
-                                </v-chip>
-                                <v-chip small class="ml-2" color="blue lighten-4" text-color="blue--text">
-                                    {{ user.role || 'User' }}
-                                </v-chip>
-                            </div>
-                        </v-col>
-                    </v-row>
+      <!-- 📋 Users -->
+      <v-row>
+        <v-col v-for="user in paginatedUsers" :key="user.id" cols="12" sm="6" md="4" lg="3">
+          <v-card class="user-card pa-4">
 
-                    <v-divider class="my-3"></v-divider>
+            <!-- Avatar -->
+            <div class="text-center mb-2">
+              <v-avatar size="60" color="primary">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </v-avatar>
+            </div>
 
-                    <v-card-actions>
-                        <v-btn text small color="primary" @click="onEdit(user.id)">Edit</v-btn>
-                        <v-spacer></v-spacer>
-                        <v-btn text small color="error" @click="onDelete(user.id)">Delete</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-col>
+            <!-- Info -->
+            <div class="text-center">
+              <div class="text-subtitle-1 font-weight-medium">
+                {{ user.name }}
+              </div>
+              <div class="text-caption text-grey">
+                {{ user.email }}
+              </div>
+              <v-chip size="small" color="blue" class="mt-2">
+                {{ user.role || 'User' }}
+              </v-chip>
+              <v-chip size="small" color="blue" class="mt-2">
+                {{ user.status || 'active' }}
+              </v-chip>
+            </div>
 
-            <v-col cols="12" v-if="!loading && filteredUsers.length === 0" class="text-center">
-                <div class="text-subtitle-1">ไม่มีผู้ใช้ที่ตรงกับการค้นหา</div>
-            </v-col>
-        </v-row>
+            <!-- Actions -->
+            <v-card-actions class="justify-center mt-2">
+              <v-btn size="small" @click="openEdit(user)">Edit</v-btn>
+              <v-btn size="small" color="error" @click="onDelete(user.id)">
+                Delete
+              </v-btn>
+            </v-card-actions>
+
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- ❗ No Data -->
+      <div v-if="filteredUsers.length === 0" class="text-center mt-6">
+        No users found
+      </div>
+
+      <!-- 🔥 Pagination -->
+      <div class="d-flex justify-center mt-6">
+        <v-pagination v-model="page" :length="totalPages" />
+      </div>
+
     </v-card>
+
+    <!-- ➕ Dialog -->
+    <v-dialog v-model="dialog" max-width="400">
+      <v-card>
+        <v-card-title>
+          {{ isEdit ? "Edit User" : "Add User" }}
+        </v-card-title>
+
+        <v-card-text>
+          <v-text-field v-model="form.name" label="Name" />
+          <v-text-field v-model="form.email" label="Email" />
+        </v-card-text>
+        <v-select v-model="form.role" :items="['Admin', 'User']" label="Role" variant="outlined" class="mt-2" />
+
+        <v-card-actions>
+          <v-btn @click="dialog = false">Cancel</v-btn>
+          <v-btn color="primary" @click="saveUser">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { collection, query, onSnapshot } from 'firebase/firestore'
-import { db } from '../../firebase/config'
+import { ref, computed, onMounted } from "vue"
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "firebase/firestore"
+import { db } from "../../firebase/config"
 
 interface User {
   id: string
-  name?: string
-  email?: string
-  role?: string
-  status?: 'active' | 'inactive' | string
+  name: string
+  email: string
+  role: string
+  status?: string
 }
 
-const search = ref('')
 const users = ref<User[]>([])
-const loading = ref(true)
+const search = ref("")
 
-let unsub: (() => void) | null = null
+// pagination
+const page = ref(1)
+const itemsPerPage = 8
 
+// dialog
+const dialog = ref(false)
+const isEdit = ref(false)
+const editId = ref("")
+
+const form = ref({
+  name: "",
+  email: "",
+  role: "User"
+})
+
+// 🔥 โหลดข้อมูล
 onMounted(() => {
-  try {
-    // 🔥 เอา orderBy ออกก่อน (กันพัง)
-    const q = query(collection(db, 'users'))
-
-    unsub = onSnapshot(
-      q,
-      snapshot => {
-        console.log('RAW DATA:', snapshot.docs.map(d => d.data())) // 🔥 debug
-
-        users.value = snapshot.docs.map(d => {
-          const data = d.data() as any
-
-          return {
-            id: d.id,
-            name: data.name ?? '',
-            email: data.email ?? '',
-            role: data.role ?? 'User',
-            status: data.status ?? 'inactive'
-          }
-        })
-
-        loading.value = false
-      },
-      err => {
-        console.error('🔥 Firestore error:', err)
-        loading.value = false
+  onSnapshot(collection(db, "users"), snapshot => {
+    users.value = snapshot.docs.map(d => {
+      const data = d.data() as any
+      return {
+        id: d.id,
+        name: data.name ?? data.displayName ?? "",
+        email: data.email ?? "",
+        role: data.role ?? "User",
+        status: data.status ?? "active"
       }
-    )
-  } catch (err) {
-    console.error('🔥 Setup error:', err)
-    loading.value = false
-  }
+    })
+  })
 })
 
-onUnmounted(() => {
-  if (unsub) unsub()
-})
-
+// 🔍 filter
 const filteredUsers = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  if (!q) return users.value
-
   return users.value.filter(u =>
-    (u.name || '').toLowerCase().includes(q) ||
-    (u.email || '').toLowerCase().includes(q) ||
-    (u.role || '').toLowerCase().includes(q)
+    u.name.toLowerCase().includes(search.value.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.value.toLowerCase())
   )
 })
 
-function onAddUser() {
-  console.log('Add user')
+// 🔥 pagination logic
+const totalPages = computed(() =>
+  Math.ceil(filteredUsers.value.length / itemsPerPage)
+)
+
+const paginatedUsers = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredUsers.value.slice(start, start + itemsPerPage)
+})
+
+// ➕ add
+function openAdd() {
+  isEdit.value = false
+  form.value = { name: "", email: "", role: "User" }
+  dialog.value = true
 }
 
-function onEdit(id: string) {
-  console.log('Edit user', id)
+// ✏️ edit
+function openEdit(user: User) {
+  isEdit.value = true
+  editId.value = user.id
+  form.value = { name: user.name, email: user.email, role: user.role || "User" }
+  dialog.value = true
 }
 
-function onDelete(id: string) {
-  console.log('Delete user', id)
+// 💾 save
+async function saveUser() {
+  if (!form.value.name || !form.value.email) return
+
+  if (isEdit.value) {
+    await updateDoc(doc(db, "users", editId.value), {
+      name: form.value.name,
+      email: form.value.email,
+      role: form.value.role
+    })
+  } else {
+    await addDoc(collection(db, "users"), {
+      name: form.value.name,
+      email: form.value.email,
+      role: form.value.role,
+      status: "active"
+    })
+  }
+
+  dialog.value = false
+}
+
+// ❌ delete
+async function onDelete(id: string) {
+  if (!confirm("Delete user?")) return
+  await deleteDoc(doc(db, "users", id))
 }
 </script>
 

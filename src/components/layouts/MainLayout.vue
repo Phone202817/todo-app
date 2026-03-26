@@ -45,7 +45,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-
+import { computed } from "vue"
+import { currentUser } from "../composables/useAuth"
 import { signOut } from 'firebase/auth'
 import { auth } from '../../firebase/config'
 
@@ -54,17 +55,19 @@ const router = useRouter()
 const drawer = ref(true)
 const rail = ref(true)
 
-interface MenuItem {
-  icon: string
-  title: string
-  path: string
-}
 
-const items: MenuItem[] = [
 
-  { icon: 'mdi-account', title: 'User Manage', path: '/usermanage' },
-  { icon: 'mdi-logout', title: 'Logout', path: '/login' },
-]
+const items = computed(() => {
+  return [
+    { icon: 'mdi-chart-bar', title: 'Overview', path: '/overview' },
+
+    ...(currentUser.value?.role === "admin"
+      ? [{ icon: 'mdi-account', title: 'User Manage', path: '/usermanage' }]
+      : []),
+
+    { icon: 'mdi-logout', title: 'Logout', path: '/login' },
+  ]
+})
 
 // 🔥 ฟังก์ชันเปลี่ยนหน้า
 const goTo = async (path: string) => {

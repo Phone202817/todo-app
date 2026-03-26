@@ -20,11 +20,22 @@ const routes: RouteRecordRaw[] = [
   {
   path: '/usermanage',
   component: () => import("../layouts/MainLayout.vue"),
-  meta: { requiresAuth: true },
+  meta: { requiresAuth: true, requiresAdmin: true },
   children: [
     {
       path: '',
       component: UserManage
+    }
+  ]
+},
+{
+  path: '/overview',
+  component: () => import("../layouts/MainLayout.vue"),
+  meta: { requiresAuth: true },
+  children: [
+    {
+      path: '',
+      component: () => import("../pages/Overview.vue")
     }
   ]
 },
