@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+// App root renders the active route
 </script>
 
 <template>
-  <HelloWorld />
+  <router-view />
 </template>

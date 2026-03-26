@@ -1,12 +1,12 @@
 
 
-import Login from '../pages/Login';
+import Login from '../pages/Login.vue';
 
 const routes = [
-//   {
-//     path: "/",
-//     component: Home,
-//   },
+  {
+    path: "/",
+    component: Login,
+  },
   {
     path: "/login",
     component: Login,
@@ -16,3 +16,5 @@ const routes = [
 //     component: Register,
 //   },
 ];
+
+export default routes;
