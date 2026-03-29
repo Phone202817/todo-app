@@ -59,7 +59,7 @@ const rail = ref(true)
 
 const items = computed(() => {
   return [
-    { icon: 'mdi-chart-bar', title: 'Overview', path: '/overview' },
+    { icon: 'mdi-calendar-today', title: 'Overview', path: '/overview' },
 
     ...(currentUser.value?.role === "admin"
       ? [{ icon: 'mdi-account', title: 'User Manage', path: '/usermanage' }]
