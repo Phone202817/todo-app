@@ -84,11 +84,15 @@
       </v-card>
     </v-dialog>
 
+    <v-snackbar v-model="errorOpen" color="error" timeout="4000">
+      {{ errorText }}
+    </v-snackbar>
+
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 import {
   collection,
   onSnapshot,
@@ -109,6 +113,12 @@ interface User {
 
 const users = ref<User[]>([])
 const search = ref("")
+const errorOpen = ref(false)
+const errorText = ref("")
+function showError(msg: string) {
+  errorText.value = msg
+  errorOpen.value = true
+}
 
 // pagination
 const page = ref(1)
@@ -125,20 +135,30 @@ const form = ref({
   role: "User"
 })
 
-// 🔥 โหลดข้อมูล
+const unsubscribe = ref<null | (() => void)>(null)
 onMounted(() => {
-  onSnapshot(collection(db, "users"), snapshot => {
-    users.value = snapshot.docs.map(d => {
-      const data = d.data() as any
-      return {
-        id: d.id,
-        name: data.name ?? data.displayName ?? "",
-        email: data.email ?? "",
-        role: data.role ?? "User",
-        status: data.status ?? "active"
-      }
-    })
-  })
+  unsubscribe.value = onSnapshot(
+    collection(db, "users"),
+    snapshot => {
+      users.value = snapshot.docs.map(d => {
+        const data = d.data() as any
+        return {
+          id: d.id,
+          name: data.name ?? data.displayName ?? "",
+          email: data.email ?? "",
+          role: data.role ?? "User",
+          status: data.status ?? "active"
+        }
+      })
+    },
+    err => {
+      users.value = []
+      showError(err?.message || "ไม่สามารถโหลดผู้ใช้งานได้ (อาจไม่มีสิทธิ์)")
+    }
+  )
+})
+onBeforeUnmount(() => {
+  if (unsubscribe.value) unsubscribe.value()
 })
 
 // 🔍 filter
@@ -178,19 +198,23 @@ function openEdit(user: User) {
 async function saveUser() {
   if (!form.value.name || !form.value.email) return
 
-  if (isEdit.value) {
-    await updateDoc(doc(db, "users", editId.value), {
-      name: form.value.name,
-      email: form.value.email,
-      role: form.value.role
-    })
-  } else {
-    await addDoc(collection(db, "users"), {
-      name: form.value.name,
-      email: form.value.email,
-      role: form.value.role,
-      status: "active"
-    })
+  try {
+    if (isEdit.value) {
+      await updateDoc(doc(db, "users", editId.value), {
+        name: form.value.name,
+        email: form.value.email,
+        role: form.value.role
+      })
+    } else {
+      await addDoc(collection(db, "users"), {
+        name: form.value.name,
+        email: form.value.email,
+        role: form.value.role,
+        status: "active"
+      })
+    }
+  } catch (e: any) {
+    showError(e?.message || "บันทึกผู้ใช้ไม่สำเร็จ")
   }
 
   dialog.value = false
@@ -199,7 +223,11 @@ async function saveUser() {
 // ❌ delete
 async function onDelete(id: string) {
   if (!confirm("Delete user?")) return
-  await deleteDoc(doc(db, "users", id))
+  try {
+    await deleteDoc(doc(db, "users", id))
+  } catch (e: any) {
+    showError(e?.message || "ลบผู้ใช้ไม่สำเร็จ")
+  }
 }
 </script>
 

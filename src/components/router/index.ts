@@ -31,17 +31,14 @@ router.beforeEach(async (to, _from, next) => {
 
     const publicPages = ['/login', '/register']
 
-    // 🔥 login แล้วห้ามกลับ login/register
     if (user && publicPages.includes(to.path)) {
       return next('/overview')
     }
 
-    // 🔐 ต้อง login
     if (to.meta.requiresAuth && !user) {
       return next('/login')
     }
 
-    // 🔥 check admin
     if (to.meta.requiresAdmin) {
       const snap = await getDoc(doc(db, "users", user!.uid))
       const data = snap.data()
@@ -53,6 +50,12 @@ router.beforeEach(async (to, _from, next) => {
 
     next()
   } catch (err) {
+    if (to.meta.requiresAdmin) {
+      return next('/overview')
+    }
+    if (to.meta.requiresAuth) {
+      return next('/login')
+    }
     next()
   }
 })

@@ -7,8 +7,12 @@ export const currentUser = ref<any>(null)
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db, "users", user.uid))
-    currentUser.value = snap.data()
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid))
+      currentUser.value = snap.data()
+    } catch {
+      currentUser.value = null
+    }
   } else {
     currentUser.value = null
   }
