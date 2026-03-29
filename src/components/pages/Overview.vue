@@ -1,23 +1,52 @@
 <template>
   <v-container fluid>
     <v-card class="pa-3 my-3 d-flex justify-space-between align-center">
-    <div>Calendars</div>
-    <div class="d-flex align-center" style="gap: 12px;">
-      <v-autocomplete
-        v-model="searchSelectedId"
-        :items="searchItems"
-        item-title="title"
-        item-value="id"
-        density="comfortable"
-        variant="outlined"
-        hide-details
-        clearable
-        placeholder="Search event..."
-        style="min-width: 260px;"
-        @update:modelValue="onSelectSearch"
-      />
-      <v-btn color="primary" @click="openAdd">ADD TODO</v-btn>
-    </div>
+      <div class="d-flex align-center" style="gap: 8px;">
+        <v-btn
+          v-if="type === 'day'"
+          icon
+          variant="text"
+          density="comfortable"
+          @click="backToMonth"
+        >
+          <v-icon>mdi-arrow-left</v-icon>
+        </v-btn>
+        <div>Calendars</div>
+      </div>
+      <div class="d-flex align-center" style="gap: 12px;">
+        <div class="d-flex align-center" style="gap: 6px;">
+          <v-icon color="blue" size="small">mdi-circle</v-icon>
+          <span class="text-caption">Upcoming</span>
+        </div>
+        <div class="d-flex align-center" style="gap: 6px;">
+          <v-icon color="yellow" size="small">mdi-circle</v-icon>
+          <span class="text-caption">Ongoing</span>
+        </div>
+        <div class="d-flex align-center" style="gap: 6px;">
+          <v-icon color="green" size="small">mdi-circle</v-icon>
+          <span class="text-caption">Done</span>
+        </div>
+        <div class="d-flex align-center" style="gap: 6px;">
+          <v-icon color="red" size="small">mdi-circle</v-icon>
+          <span class="text-caption">Overdue</span>
+        </div>
+      </div>
+      <div class="d-flex align-center" style="gap: 12px;">
+        <v-autocomplete
+          v-model="searchSelectedId"
+          :items="searchItems"
+          item-title="title"
+          item-value="id"
+          density="comfortable"
+          variant="outlined"
+          hide-details
+          clearable
+          placeholder="Search event..."
+          style="min-width: 260px;"
+          @update:modelValue="onSelectSearch"
+        />
+        <v-btn color="primary" @click="openAdd">ADD TODO</v-btn>
+      </div>
   </v-card>
   <v-row class="fill-height">
     <v-col>
@@ -397,6 +426,10 @@
   }
   function next () {
     calendar.value.next()
+  }
+  function backToMonth () {
+    type.value = 'month'
+    if (calendar.value) calendar.value.checkChange()
   }
   function showEvent (nativeEvent: Event, { event }: any) {
     const open = () => {
