@@ -1,4 +1,10 @@
 <template>
+  <!-- หน้านี้สำหรับจัดการผู้ใช้:
+       - ส่วนหัว: ชื่อหน้า + ปุ่ม Add User
+       - ช่องค้นหา: filter ตามชื่อ/อีเมล
+       - การ์ดผู้ใช้: แสดงชื่อ อีเมล บทบาท (role) และสถานะ (มีสีบอกสถานะ)
+       - Dialog: ฟอร์มเพิ่ม/แก้ไขผู้ใช้
+       - Snackbar: แจ้งข้อผิดพลาดเมื่อสิทธิ์ไม่พอหรือคำสั่งล้มเหลว -->
   <v-container fluid>
     <v-card class="pa-6 rounded-xl elevation-3">
 
@@ -92,6 +98,10 @@
 </template>
 
 <script setup lang="ts">
+// โค้ดควบคุมหน้าจัดการผู้ใช้:
+// - subscribe ข้อมูล collection "users" แบบ realtime ด้วย onSnapshot
+// - filter และแบ่งหน้า (pagination) ในฝั่ง client
+// - เพิ่ม/แก้ไข/ลบผู้ใช้ พร้อมจับ error แสดง snackbar
 import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 import {
   collection,
@@ -136,6 +146,7 @@ const form = ref({
 })
 
 const unsubscribe = ref<null | (() => void)>(null)
+// โหลดข้อมูลผู้ใช้แบบ realtime; หากเกิด error (เช่น ไม่มีสิทธิ์) จะแจ้งผ่าน snackbar
 onMounted(() => {
   unsubscribe.value = onSnapshot(
     collection(db, "users"),
@@ -162,6 +173,7 @@ onBeforeUnmount(() => {
 })
 
 // 🔍 filter
+// กรองรายชื่อจากชื่อ/อีเมลที่พิมพ์ในช่องค้นหา
 const filteredUsers = computed(() => {
   return users.value.filter(u =>
     u.name.toLowerCase().includes(search.value.toLowerCase()) ||
@@ -195,6 +207,7 @@ function openEdit(user: User) {
 }
 
 // 💾 save
+// หากเป็นโหมดแก้ไขจะ update ที่เอกสารเดิม มิฉะนั้นจะเพิ่มผู้ใช้ใหม่
 async function saveUser() {
   if (!form.value.name || !form.value.email) return
 
@@ -221,6 +234,7 @@ async function saveUser() {
 }
 
 // ❌ delete
+// ยืนยันก่อนลบ และจับ error เมื่อไม่มีสิทธิ์
 async function onDelete(id: string) {
   if (!confirm("Delete user?")) return
   try {

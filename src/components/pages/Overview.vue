@@ -1,4 +1,9 @@
 <template>
+  <!-- หน้านี้แสดงปฏิทินงาน (Todo) พร้อมเครื่องมือ:
+       - ส่วนหัว: ปุ่มย้อนกลับ (เมื่อดูแบบ Day), ชื่อ Calendars, Legend สีอธิบายสถานะ, ค้นหาอีเวนต์, ปุ่มเพิ่มงาน
+       - แถบควบคุม: Today/Prev/Next, สลับมุมมอง Day/Week/Month/4 days, และ Go to date
+       - ปฏิทิน: แสดงอีเวนต์, จัดสีตามสถานะเวลา/เสร็จงาน, คลิกเพื่อดู/แก้ไข/ลบ
+       - Dialog: แบบฟอร์มเพิ่ม/แก้ไข (ชื่อ, รายละเอียด, วันที่/เวลาเริ่ม, วันที่/เวลาเดดไลน์) -->
   <v-container fluid>
     <v-card class="pa-3 my-3 d-flex justify-space-between align-center">
       <div class="d-flex align-center" style="gap: 8px;">
@@ -275,6 +280,10 @@
 </template>
 
 <script setup lang="ts">
+  // โค้ดส่วนควบคุมปฏิทินและการจัดการอีเวนต์:
+  // - จัดการสถานะด้วย ref/computed/watch
+  // - ติดต่อ Firestore เพื่อโหลด/เพิ่ม/แก้ไข/ลบอีเวนต์ (ภายใต้ users/{uid}/events)
+  // - กำหนดสีอีเวนต์จากสถานะเวลา (ฟ้า/เหลือง/เขียว/แดง)
   import { onMounted, ref, computed, nextTick, watch } from 'vue'
   import { auth, db } from '../../firebase/config'
   import {
@@ -289,6 +298,7 @@
     where,
   } from 'firebase/firestore'
 
+  // ประเภทมุมมองของปฏิทิน และโครงสร้างข้อมูลอีเวนต์ในแอป
   type CalendarViewType = 'month' | 'week' | 'day' | '4day'
   type MyCalendarEvent = {
     name: string
@@ -381,6 +391,7 @@
     if (v) backupEndTime.value = form.value.endTime
   })
 
+  // แปลงรายการอีเวนต์เป็นตัวเลือกสำหรับ autocomplete เพื่อค้นหาและกระโดดไปวันนั้น
   const searchItems = computed(() => {
     return events.value.map(e => {
       const d = new Date(e.start)
@@ -393,6 +404,11 @@
     focus.value = date
     type.value = 'day'
   }
+  // คำนวณสีอีเวนต์แบบอัตโนมัติ:
+  // - เสร็จแล้ว (done) = เขียว
+  // - ยังไม่ถึงเวลา = ฟ้า
+  // - อยู่ในช่วงเวลา = เหลือง
+  // - เกินกำหนดและยังไม่เสร็จ = แดง
   function getEventColor (event: any) {
     const now = Date.now()
     const start = new Date(event.start).getTime()
@@ -411,6 +427,7 @@
     type.value = 'day'
     if (calendar.value) calendar.value.checkChange()
   }
+  // ยืนยันวันจากเมนู Go to date และเปลี่ยนเป็นมุมมอง Day
   function onConfirmGoDate() {
     if (!goDateDraft.value) return
     focus.value = goDateDraft.value
@@ -461,6 +478,7 @@
       showError(e?.message || 'อัปเดตสถานะไม่สำเร็จ')
     }
   }
+  // โหลดอีเวนต์จาก Firestore ตามช่วงวันที่ที่ปฏิทินร้องขอ
   async function updateRange ({ start, end }: any) {
     const min = new Date(`${start.date}T00:00:00`).getTime()
     const max = new Date(`${end.date}T23:59:59`).getTime()
@@ -545,6 +563,8 @@
       showError(e?.message || 'ลบอีเวนต์ไม่สำเร็จ')
     }
   }
+  // บันทึกอีเวนต์: ตรวจข้อมูล, รวมวันที่/เวลาเป็น timestamp, add/update Firestore,
+  // อัปเดตในรายการ events ทันที และรีเฟรชปฏิทิน
   async function saveEvent () {
     const uid = auth.currentUser?.uid
     if (!uid) {
